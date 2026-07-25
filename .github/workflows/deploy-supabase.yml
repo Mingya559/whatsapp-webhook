@@ -1,0 +1,50 @@
+name: Deploy Supabase Edge Function
+
+# Runs automatically whenever changes are pushed to the main branch,
+# but only if something inside supabase/functions changed.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/functions/**"
+  # Also allows manually triggering a deploy from the GitHub Actions tab.
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy whatsapp-webhook function
+        run: |
+          supabase functions deploy whatsapp-webhook \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Sync secrets to Supabase
+        run: |
+          supabase secrets set \
+            WHATSAPP_VERIFY_TOKEN="$WHATSAPP_VERIFY_TOKEN" \
+            WHATSAPP_ACCESS_TOKEN="$WHATSAPP_ACCESS_TOKEN" \
+            WHATSAPP_PHONE_NUMBER_ID="$WHATSAPP_PHONE_NUMBER_ID" \
+            WHATSAPP_REPLY_MESSAGE="$WHATSAPP_REPLY_MESSAGE" \
+            --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+          WHATSAPP_ACCESS_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          WHATSAPP_REPLY_MESSAGE: ${{ secrets.WHATSAPP_REPLY_MESSAGE }}
