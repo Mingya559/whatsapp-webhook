@@ -1,0 +1,13 @@
+{
+  "name": "whatsapp-send-message",
+  "version": "1.0.0",
+  "description": "Send a WhatsApp message using the Cloud API, reading the recipient from a received webhook payload and the message body from a text template.",
+  "main": "send-message.js",
+  "type": "commonjs",
+  "scripts": {
+    "send": "node send-message.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
