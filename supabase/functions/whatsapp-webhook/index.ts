@@ -32,7 +32,7 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
   }
 
   // 使用速度快、性价比高且适合实时对话的 gemini-2.5-flash 模型
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   try {
     const response = await fetch(url, {
