@@ -31,8 +31,8 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
     return "您好！感谢您的留言。我们将尽快为您回复！";
   }
 
-  // 使用速度快、性价比高且适合实时对话的 gemini-2.5-flash 模型
-  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  // ✅ 使用 v1beta 配合带有别名后缀的 gemini-1.5-flash-latest，完美兼容免费账号
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
   try {
     const response = await fetch(url, {
