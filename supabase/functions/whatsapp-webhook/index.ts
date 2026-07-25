@@ -29,8 +29,8 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
     return "您好！感谢您的留言。我们将尽快为您回复！";
   }
 
-  // ✅ 使用原生 API endpoint 和标准 gemini-2.0-flash 模型
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+  // ✅ 改用免费配额开放的 gemini-2.5-flash 模型
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
   try {
     const response = await fetch(url, {
@@ -55,11 +55,6 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
 
     if (!response.ok) {
       console.error("Gemini API Status Error:", response.status, JSON.stringify(data));
-      
-      // 如果报 404，打印出你的 API Key 到底能访问哪些模型
-      if (response.status === 404) {
-        await checkAvailableModels();
-      }
       throw new Error(`Gemini API Error: ${response.status}`);
     }
 
