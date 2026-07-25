@@ -12,7 +12,7 @@ const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID")!;
 const WHATSAPP_API_VERSION = Deno.env.get("WHATSAPP_API_VERSION") ?? "v25.0";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
-// 初始化 Gemini 客户端
+// 初始化 Gemini 客户端，显式配置 API Key
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY || "" });
 
 const supabase = createClient(
@@ -30,16 +30,27 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
   }
 
   try {
-    // 使用官方标准的 gemini-1.5-flash 模型，SDK 会自动寻址正确的 Endpoint
+    // 💡 关键修改：使用带具体后缀的 `gemini-1.5-flash-001` 或 `gemini-2.0-flash-exp`
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash-001", 
       contents: `你是一个专业的 WhatsApp 客服助手，请用简短、自然且友好的语言回复用户的消息。请将回答控制在 2 至 3 句话以内。\n\n用户消息：${userMessage}`,
     });
 
     return response.text?.trim() || "收到您的消息，我会尽快为您处理！";
   } catch (error) {
     console.error("Failed to generate reply with Gemini SDK:", error);
-    return "收到您的消息，我们会尽快为您解答！";
+    
+    // 如果 001 版本依然遇到特殊限制，尝试备用模型逻辑
+    try {
+      const fallbackResponse = await ai.models.generateContent({
+        model: "gemini-2.0-flash-exp",
+        contents: `你是一个专业的 WhatsApp 客服助手，请简短回复：${userMessage}`,
+      });
+      return fallbackResponse.text?.trim() || "收到您的消息，我会尽快为您处理！";
+    } catch (fallbackError) {
+      console.error("Fallback model also failed:", fallbackError);
+      return "收到您的消息，我们会尽快为您解答！";
+    }
   }
 }
 
