@@ -19,7 +19,7 @@ jobs:
         with:
           version: latest
 
-      # 1. 设置 Supabase 运行密钥（安全传参方式）
+      # 1. 设置 Supabase 运行密钥
       - name: Set Supabase Secrets
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -27,13 +27,13 @@ jobs:
           WHATSAPP_VERIFY_TOKEN: ${{ secrets.WHATSAPP_VERIFY_TOKEN }}
           WHATSAPP_ACCESS_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
           WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
-          WHATSAPP_REPLY_MESSAGE: ${{ secrets.WHATSAPP_REPLY_MESSAGE }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           supabase secrets set \
             WHATSAPP_VERIFY_TOKEN="$WHATSAPP_VERIFY_TOKEN" \
-            WHATSAPP_ACCESS_TOKEN="$ACCESS_TOKEN" \
+            WHATSAPP_ACCESS_TOKEN="$WHATSAPP_ACCESS_TOKEN" \
             WHATSAPP_PHONE_NUMBER_ID="$WHATSAPP_PHONE_NUMBER_ID" \
-            WHATSAPP_REPLY_MESSAGE="$WHATSAPP_REPLY_MESSAGE" \
+            GEMINI_API_KEY="$GEMINI_API_KEY" \
             --project-ref "$SUPABASE_PROJECT_ID"
 
       # 2. 部署 Edge Function
