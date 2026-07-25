@@ -21,7 +21,7 @@ const supabase = createClient(
 );
 
 /**
- * 使用官方 SDK 调用 Gemini API 生成回复
+ * 使用原生 fetch 调用 Gemini API 生成回复
  */
 async function generateGeminiReply(userMessage: string): Promise<string> {
   if (!GEMINI_API_KEY) {
@@ -29,28 +29,60 @@ async function generateGeminiReply(userMessage: string): Promise<string> {
     return "您好！感谢您的留言。我们将尽快为您回复！";
   }
 
+  // ✅ 使用原生 API endpoint 和标准 gemini-2.0-flash 模型
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
   try {
-    // 💡 关键修改：使用带具体后缀的 `gemini-1.5-flash-001` 或 `gemini-2.0-flash-exp`
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash-001", 
-      contents: `你是一个专业的 WhatsApp 客服助手，请用简短、自然且友好的语言回复用户的消息。请将回答控制在 2 至 3 句话以内。\n\n用户消息：${userMessage}`,
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `你是一个专业的 WhatsApp 客服助手，请用简短、自然且友好的语言回复用户的消息。请将回答控制在 2 至 3 句话以内。\n\n用户消息：${userMessage}`,
+              },
+            ],
+          },
+        ],
+      }),
     });
 
-    return response.text?.trim() || "收到您的消息，我会尽快为您处理！";
-  } catch (error) {
-    console.error("Failed to generate reply with Gemini SDK:", error);
-    
-    // 如果 001 版本依然遇到特殊限制，尝试备用模型逻辑
-    try {
-      const fallbackResponse = await ai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
-        contents: `你是一个专业的 WhatsApp 客服助手，请简短回复：${userMessage}`,
-      });
-      return fallbackResponse.text?.trim() || "收到您的消息，我会尽快为您处理！";
-    } catch (fallbackError) {
-      console.error("Fallback model also failed:", fallbackError);
-      return "收到您的消息，我们会尽快为您解答！";
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Gemini API Status Error:", response.status, JSON.stringify(data));
+      
+      // 如果报 404，打印出你的 API Key 到底能访问哪些模型
+      if (response.status === 404) {
+        await checkAvailableModels();
+      }
+      throw new Error(`Gemini API Error: ${response.status}`);
     }
+
+    const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    return aiReply?.trim() || "收到您的消息，我会尽快为您处理！";
+  } catch (error) {
+    console.error("Failed to generate reply with Gemini:", error);
+    return "收到您的消息，我们会尽快为您解答！";
+  }
+}
+
+/**
+ * 辅助排查函数：列出你的 API Key 当前允许调用的所有模型
+ */
+async function checkAvailableModels() {
+  try {
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`;
+    const res = await fetch(listUrl);
+    const listData = await res.json();
+    console.log("=== 你的 Key 允许使用的 Gemini 模型列表 ===");
+    console.log(JSON.stringify(listData, null, 2));
+  } catch (err) {
+    console.error("Failed to fetch available models:", err);
   }
 }
 
